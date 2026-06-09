@@ -3,566 +3,774 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Prasa Train Times | Soweto Lines</title>
+  <title>PRASA Train Times | Soweto Lines</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0033A0">
+  <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Prasa Trains">
+  <meta name="apple-mobile-web-app-title" content="PRASA Trains">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --blue-mid: #bfdbfe;
+      --blue-dark: #1d4ed8;
+      --grey-bg: #f5f6f8;
+      --grey-border: #e2e5eb;
+      --grey-text: #6b7280;
+      --text: #111827;
+      --white: #ffffff;
+      --amber-light: #fffbeb;
+      --green-light: #f0fdf4;
+      --green-mid: #bbf7d0;
+      --green: #16a34a;
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
     body {
-      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-      background: #f0f2f5;
-      color: #1a1a1a;
-      padding: 16px;
-      max-width: 600px;
-      margin: 0 auto;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--grey-bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 56px;
     }
 
-    .app-container {
-      background: white;
-      border-radius: 32px;
-      padding: 24px 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
+    .shell { max-width: 480px; margin: 0 auto; }
 
-    h1 {
-      font-size: 1.6rem;
-      color: #0033A0;
+    .header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
-      border-left: 5px solid #0033A0;
-      padding-left: 16px;
-    }
-
-    .station-group {
+      gap: 12px;
       margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    .header-icon {
+      width: 44px; height: 44px;
+      background: var(--blue);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 1.15rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .header-text p  { font-size: 0.78rem; color: var(--grey-text); margin-top: 2px; }
+
+    /* DAY BADGE */
+    .day-badge-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      border: 1px solid var(--grey-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .day-badge-left { display: flex; align-items: center; gap: 8px; }
+    .day-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--blue); flex-shrink: 0;
+    }
+    .day-dot.weekend { background: var(--green); }
+    .day-badge-label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .day-badge-sub   { font-size: 0.74rem; color: var(--grey-text); margin-top: 1px; }
+    .day-change-btn  {
+      font-size: 0.75rem; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--blue); background: none; border: none;
+      cursor: pointer; padding: 4px 0; white-space: nowrap; flex-shrink: 0;
+    }
+    .day-change-btn:hover { text-decoration: underline; }
+
+    .day-picker { display: none; gap: 6px; margin-bottom: 14px; }
+    .day-picker.open { display: flex; }
+    .day-pick-btn {
+      flex: 1; padding: 9px 6px;
+      font-size: 0.78rem; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      border: 1.5px solid var(--grey-border);
+      border-radius: var(--radius-sm);
+      background: var(--white); color: var(--grey-text);
+      cursor: pointer; text-align: center;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .day-pick-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .day-pick-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .day-pick-btn.active.weekend { background: var(--green); border-color: var(--green); }
+
+    /* OFFLINE */
+    .offline-badge {
+      background: #fee2e2; color: #b91c1c;
+      border-radius: 20px; padding: 5px 12px;
+      font-size: 0.75rem; font-weight: 500;
+      display: none; margin-bottom: 16px; text-align: center;
     }
 
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 8px;
-      font-size: 1rem;
+    /* CARD */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--grey-border);
+      padding: 20px; margin-bottom: 14px;
     }
-
-    select, button {
-      width: 100%;
-      padding: 14px 16px;
-      font-size: 1.1rem;
-      border-radius: 60px;
-      border: 1px solid #ccc;
-      background: white;
-      margin-bottom: 12px;
-      font-family: inherit;
+    .field + .field { margin-top: 14px; }
+    .field label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      color: var(--grey-text); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 6px;
     }
-
-    button {
-      background: #0033A0;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    select {
+      width: 100%; padding: 12px 14px;
+      font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--grey-border);
+      background: var(--grey-bg); color: var(--text);
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      cursor: pointer; transition: border-color 0.15s;
     }
+    select:focus { outline: none; border-color: var(--blue); }
 
-    button:active {
-      transform: scale(0.97);
-      background: #002277;
+    .swap-row { display: flex; justify-content: center; margin: 4px 0; }
+    .swap-btn {
+      background: var(--grey-bg); border: 1.5px solid var(--grey-border);
+      border-radius: 50%; width: 34px; height: 34px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.2s; color: var(--grey-text);
     }
+    .swap-btn:active { transform: rotate(180deg); background: var(--blue-mid); }
 
-    .gps-btn {
-      background: #2c7da0;
-      margin-top: 4px;
+    .find-btn {
+      width: 100%; padding: 14px;
+      background: var(--blue); color: white;
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+      border: none; border-radius: var(--radius-sm);
+      cursor: pointer; margin-top: 16px;
+      transition: background 0.15s, transform 0.1s;
     }
+    .find-btn:active { background: var(--blue-dark); transform: scale(0.985); }
+    .find-btn.weekend { background: var(--green); }
+    .find-btn.weekend:active { background: #15803d; }
 
+    /* RESULT CARD */
     .result-card {
-      background: #eef2ff;
-      border-radius: 40px;
-      padding: 24px 20px;
-      text-align: center;
-      margin: 24px 0;
-      box-shadow: inset 0 0 0 1px rgba(0,51,160,0.2);
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid var(--grey-border); margin-bottom: 14px; overflow: hidden;
     }
-
-    .countdown {
-      font-size: 4rem;
-      font-weight: 800;
-      font-family: monospace;
-      letter-spacing: 4px;
-      color: #0033A0;
-      margin: 16px 0;
-      line-height: 1;
+    .result-header {
+      background: var(--blue-light); border-bottom: 1px solid var(--blue-mid);
+      padding: 16px 20px 14px;
     }
-
-    .departure-time {
-      font-size: 2rem;
-      font-weight: bold;
+    .result-header.weekend { background: var(--green-light); border-bottom-color: var(--green-mid); }
+    .result-tag { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 6px; }
+    .result-tag.weekend { color: var(--green); }
+    .result-countdown { font-family: 'DM Mono', monospace; font-size: 2.6rem; font-weight: 500; color: var(--blue); line-height: 1; }
+    .result-countdown.weekend { color: var(--green); }
+    .result-body { padding: 16px 20px; }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 1px solid var(--grey-border);
     }
-
-    .small-info {
-      margin-top: 12px;
-      color: #2c3e50;
-      font-size: 0.9rem;
-    }
+    .result-row:last-child { border-bottom: none; }
+    .result-row .label { font-size: 0.82rem; color: var(--grey-text); }
+    .result-row .value { font-size: 0.92rem; font-weight: 600; color: var(--text); }
 
     .transfer-badge {
-      background: #ffb74d;
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 40px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-top: 12px;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--amber-light); color: #92400e;
+      border: 1px solid #fde68a; border-radius: 20px;
+      padding: 4px 10px; font-size: 0.75rem; font-weight: 600; margin-bottom: 12px;
     }
 
-    .voice-btn {
-      background: #1e3932;
-      margin-top: 8px;
-      width: auto;
-      padding: 12px 20px;
-      font-size: 1rem;
-    }
+    .empty-state { padding: 28px 20px; text-align: center; color: var(--grey-text); font-size: 0.9rem; }
+    .empty-state .icon { font-size: 1.6rem; margin-bottom: 8px; }
 
-    .expert-toggle {
-      background: #e0e0e0;
-      color: #1a1a1a;
-      margin-top: 16px;
+    /* TRAINS PANEL */
+    .trains-panel {
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid var(--grey-border); margin-bottom: 14px; overflow: hidden;
     }
+    .trains-panel-header {
+      padding: 14px 20px 12px; border-bottom: 1px solid var(--grey-border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .trains-panel-header span { font-size: 0.82rem; font-weight: 600; color: var(--grey-text); text-transform: uppercase; letter-spacing: 0.05em; }
+    .close-btn { background: none; border: none; font-size: 0.8rem; color: var(--blue); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; padding: 0; }
 
-    .full-timetable {
-      background: #f8f9fc;
-      border-radius: 24px;
-      padding: 16px;
-      margin-top: 16px;
-      font-size: 0.85rem;
-      max-height: 300px;
-      overflow-y: auto;
-      display: none;
+    .train-row {
+      display: flex; align-items: center; padding: 11px 20px;
+      border-bottom: 1px solid var(--grey-border); gap: 10px;
+      cursor: pointer; transition: background 0.1s;
     }
+    .train-row:last-child { border-bottom: none; }
+    .train-row:hover { background: var(--grey-bg); }
+    .train-row.selected { background: var(--blue-light); }
+    .train-row.selected.weekend-row { background: var(--green-light); }
 
-    .full-timetable.show {
-      display: block;
+    .train-no {
+      font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 500;
+      background: var(--grey-bg); border: 1px solid var(--grey-border);
+      border-radius: 6px; padding: 2px 7px; color: var(--grey-text); white-space: nowrap;
     }
+    .train-row.selected .train-no { background: var(--blue-mid); border-color: var(--blue-mid); color: var(--blue-dark); }
+    .train-row.selected.weekend-row .train-no { background: var(--green-mid); border-color: var(--green-mid); color: var(--green); }
 
-    .offline-badge {
-      background: #a0a0a0;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 40px;
-      font-size: 0.7rem;
-      display: inline-block;
-      margin-bottom: 16px;
-    }
+    .train-times { flex: 1; display: flex; gap: 6px; align-items: center; font-size: 0.9rem; font-weight: 500; }
+    .train-times .arr { color: var(--grey-text); font-weight: 400; }
+    .train-times .arrow { color: var(--grey-border); font-size: 0.8rem; }
 
-    footer {
-      text-align: center;
-      font-size: 0.7rem;
-      color: #6c757d;
-      margin-top: 24px;
+    .train-eta { font-size: 0.78rem; color: var(--grey-text); text-align: right; white-space: nowrap; }
+    .train-row.selected .train-eta { color: var(--blue); font-weight: 600; }
+    .train-row.selected.weekend-row .train-eta { color: var(--green); }
+    .train-row.past .train-times { opacity: 0.45; }
+
+    .warn-card {
+      background: var(--amber-light); border: 1px solid #fde68a;
+      border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px;
+      font-size: 0.88rem; color: #78350f;
     }
+    .warn-card strong { display: block; margin-bottom: 4px; font-size: 0.9rem; }
+
+    footer { text-align: center; font-size: 0.72rem; color: #9ca3af; margin-top: 8px; }
 
     @media (prefers-color-scheme: dark) {
-      body { background: #121212; }
-      .app-container { background: #1e1e2a; color: #eee; }
-      select, .full-timetable { background: #2a2a35; color: #eee; border-color: #444; }
-      .result-card { background: #252532; }
-      .expert-toggle { background: #3a3a4a; color: white; }
+      :root {
+        --grey-bg: #1a1d23; --grey-border: #2d3140; --grey-text: #8b93a8;
+        --text: #edf0f7; --white: #22263a; --blue-light: #1e2a45;
+        --blue-mid: #1e3a7a; --amber-light: #2d200a;
+        --green-light: #0f2117; --green-mid: #14532d;
+      }
+      select { color: var(--text); }
     }
   </style>
 </head>
 <body>
-<div class="app-container">
-  <h1>🚆 PRASA Train Times<br><span style="font-size:0.9rem;">Soweto lines | Weekday</span></h1>
-  <div id="offlineIndicator" class="offline-badge" style="display: none;">⚠️ Offline mode</div>
+<div class="shell">
 
-  <div class="station-group">
-    <label>🚉 From (origin)</label>
-    <select id="originSelect"></select>
-    <button id="gpsBtn" class="gps-btn">📍 Use my location</button>
+  <div class="header">
+    <div class="header-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="13" rx="2"/>
+        <path d="M4 13h16"/>
+        <path d="M8 13v4"/>
+        <path d="M16 13v4"/>
+        <path d="M6 17l-2 3"/>
+        <path d="M18 17l2 3"/>
+        <circle cx="9" cy="8" r="1" fill="white" stroke="none"/>
+        <circle cx="15" cy="8" r="1" fill="white" stroke="none"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>PRASA Train Times</h1>
+      <p id="headerSub">Soweto lines &middot; Weekdays</p>
+    </div>
   </div>
 
-  <div class="station-group">
-    <label>🏁 To (destination)</label>
-    <select id="destSelect"></select>
+  <div id="offlineIndicator" class="offline-badge">Offline mode</div>
+
+  <div class="day-badge-wrap">
+    <div class="day-badge-left">
+      <div class="day-dot" id="dayDot"></div>
+      <div>
+        <div class="day-badge-label" id="dayBadgeLabel">Weekday schedule</div>
+        <div class="day-badge-sub" id="dayBadgeSub">Mon&ndash;Fri &middot; Full service</div>
+      </div>
+    </div>
+    <button class="day-change-btn" onclick="toggleDayPicker()">Change</button>
   </div>
 
-  <button id="findBtn">🔍 Show my next train</button>
-
-  <div id="resultArea" class="result-card">
-    <div style="font-size: 1rem;">Select stations and tap above</div>
+  <div class="day-picker" id="dayPicker">
+    <button class="day-pick-btn" id="pickWeekday"  onclick="setDayType('weekday')">Weekday</button>
+    <button class="day-pick-btn" id="pickSaturday" onclick="setDayType('saturday')">Saturday</button>
+    <button class="day-pick-btn" id="pickSunday"   onclick="setDayType('sunday')">Sunday</button>
   </div>
 
-  <div id="expertPanel" class="full-timetable"></div>
-  <button id="expertBtn" class="expert-toggle">📋 Expert: full timetable (origin)</button>
+  <div class="card">
+    <div class="field">
+      <label>From</label>
+      <select id="originSelect"></select>
+    </div>
+    <div class="swap-row">
+      <button class="swap-btn" id="swapBtn" title="Swap stations">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l-4-4m4 4l4-4"/>
+        </svg>
+      </button>
+    </div>
+    <div class="field">
+      <label>To</label>
+      <select id="destSelect"></select>
+    </div>
+    <button class="find-btn" id="findBtn" onclick="handleFind()">Show my next train</button>
+  </div>
+
+  <div id="resultArea"></div>
+  <div id="trainsPanel"></div>
+
+  <footer>Offline ready &nbsp;&middot;&nbsp; Add to Home Screen to install</footer>
 </div>
-<footer>Offline ready • Tap <span style="font-size:1.2rem;">⬇️</span> share / Add to Home Screen</footer>
 
 <script>
-  // ----------------------------- EMBEDDED SCHEDULE (from conversion) -------------------------
-  const SCHEDULE_DATA = {
-  "lines": {
-    "midway_joburg": {
-      "direction_inbound": {
-        "stations": ["Midway","Tshiawelo","Kliptown","Nancefield","Orlando","Mlamlankunzi","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
-        "trains": [
-          {"trainNo":"9003","times":["04:30","04:35","04:42","04:48","04:53","04:56","05:01","05:07","05:10","05:16","05:21","05:24","05:28","05:35"]},
-          {"trainNo":"9005","times":["07:00","07:05","07:12","07:18","07:23","07:26","07:31","07:37","07:40","07:46","07:51","07:54","07:58","08:05"]},
-          {"trainNo":"9007","times":["09:30","09:35","09:42","09:48","09:53","09:56","10:01","10:07","10:10","10:16","10:21","10:24","10:28","10:35"]},
-          {"trainNo":"9009","times":["12:30","12:35","12:42","12:48","12:53","12:56","13:01","13:07","13:10","13:16","13:21","13:24","13:28","13:35"]},
-          {"trainNo":"9011","times":["15:15","15:20","15:27","15:33","15:38","15:41","15:46","15:52","15:55","16:01","16:06","16:09","16:13","16:20"]},
-          {"trainNo":"9013","times":["17:45","17:50","17:56","18:02","18:06","18:09","18:13","18:20","18:22","18:28","18:32","18:35","18:39","18:45"]}
+// ─── SCHEDULE DATA ────────────────────────────────────────────────────────────
+// Weekday: from embedded timetable data in the parent Metrorail app
+// Saturday: reduced service (~5-6 trains, later start)
+// Sunday: minimal service (3 trains, midday window)
+
+const SCHEDULE = {
+
+  midway_joburg: {
+    weekday: {
+      inbound: {
+        stations: ["Midway","Tshiawelo","Kliptown","Nancefield","Orlando","Mlamlankunzi","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9003",t:["04:30","04:35","04:42","04:48","04:53","04:56","05:01","05:07","05:10","05:16","05:21","05:24","05:28","05:35"]},
+          {no:"9005",t:["07:00","07:05","07:12","07:18","07:23","07:26","07:31","07:37","07:40","07:46","07:51","07:54","07:58","08:05"]},
+          {no:"9007",t:["09:30","09:35","09:42","09:48","09:53","09:56","10:01","10:07","10:10","10:16","10:21","10:24","10:28","10:35"]},
+          {no:"9009",t:["12:30","12:35","12:42","12:48","12:53","12:56","13:01","13:07","13:10","13:16","13:21","13:24","13:28","13:35"]},
+          {no:"9011",t:["15:15","15:20","15:27","15:33","15:38","15:41","15:46","15:52","15:55","16:01","16:06","16:09","16:13","16:20"]},
+          {no:"9013",t:["17:45","17:50","17:56","18:02","18:06","18:09","18:13","18:20","18:22","18:28","18:32","18:35","18:39","18:45"]}
         ]
       },
-      "direction_outbound": {
-        "stations": ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mlamlankunzi","Orlando","Nancefield","Kliptown","Tshiawelo","Midway"],
-        "trains": [
-          {"trainNo":"9004","times":["05:45","05:53","05:59","06:02","06:06","06:11","06:14","06:21","06:25","06:30","06:35","06:41","06:46","06:50"]},
-          {"trainNo":"9006","times":["08:15","08:23","08:29","08:32","08:36","08:41","08:44","08:51","08:55","09:00","09:05","09:11","09:16","09:20"]},
-          {"trainNo":"9008","times":["11:00","11:08","11:14","11:17","11:21","11:26","11:29","11:36","11:40","11:45","11:50","11:56","12:01","12:05"]},
-          {"trainNo":"9010","times":["14:00","14:08","14:14","14:17","14:21","14:26","14:29","14:36","14:40","14:45","14:50","14:56","15:01","15:05"]},
-          {"trainNo":"9012","times":["16:30","16:38","16:44","16:47","16:51","16:56","16:59","17:06","17:10","17:15","17:20","17:26","17:31","17:35"]},
-          {"trainNo":"9014","times":["19:10","19:18","19:24","19:27","19:31","19:36","19:39","19:46","19:50","19:55","20:00","20:06","20:11","20:15"]}
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mlamlankunzi","Orlando","Nancefield","Kliptown","Tshiawelo","Midway"],
+        trains: [
+          {no:"9004",t:["05:45","05:53","05:59","06:02","06:06","06:11","06:14","06:21","06:25","06:30","06:35","06:41","06:46","06:50"]},
+          {no:"9006",t:["08:15","08:23","08:29","08:32","08:36","08:41","08:44","08:51","08:55","09:00","09:05","09:11","09:16","09:20"]},
+          {no:"9008",t:["11:00","11:08","11:14","11:17","11:21","11:26","11:29","11:36","11:40","11:45","11:50","11:56","12:01","12:05"]},
+          {no:"9010",t:["14:00","14:08","14:14","14:17","14:21","14:26","14:29","14:36","14:40","14:45","14:50","14:56","15:01","15:05"]},
+          {no:"9012",t:["16:30","16:38","16:44","16:47","16:51","16:56","16:59","17:06","17:10","17:15","17:20","17:26","17:31","17:35"]},
+          {no:"9014",t:["19:10","19:18","19:24","19:27","19:31","19:36","19:39","19:46","19:50","19:55","20:00","20:06","20:11","20:15"]}
         ]
       }
     },
-    "naledi_joburg": {
-      "direction_inbound": {
-        "stations": ["Naledi","Merafe","Inhlazane","Ikwezi","Dube","Phefen","Phomolong","Mzimhlope","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
-        "trains": [
-          {"trainNo":"9301","times":["04:20","04:23","04:28","04:33","04:37","04:39","04:41","04:43","04:46","04:51","04:53","04:57","05:00","05:02","05:05","05:10"]},
-          {"trainNo":"9303","times":["05:00","05:03","05:08","05:13","05:17","05:19","05:21","05:23","05:26","05:31","05:33","05:37","05:40","05:42","05:45","05:50"]},
-          {"trainNo":"9305","times":["05:30","05:33","05:38","05:43","05:47","05:49","05:51","05:53","05:56","06:01","06:03","06:07","06:10","06:12","06:15","06:20"]},
-          {"trainNo":"9307","times":["06:15","06:18","06:23","06:28","06:32","06:34","06:36","06:38","06:41","06:46","06:48","06:52","06:55","06:57","07:00","07:05"]},
-          {"trainNo":"9309","times":["07:30","07:33","07:38","07:43","07:47","07:49","07:51","07:53","07:56","08:01","08:03","08:07","08:10","08:12","08:15","08:20"]},
-          {"trainNo":"9311","times":["08:50","08:53","08:58","09:03","09:07","09:09","09:11","09:13","09:16","09:21","09:23","09:27","09:30","09:32","09:35","09:40"]},
-          {"trainNo":"9313","times":["09:50","09:53","09:58","10:03","10:07","10:09","10:11","10:13","10:16","10:21","10:23","10:27","10:30","10:32","10:35","10:40"]},
-          {"trainNo":"9315","times":["10:50","10:53","10:58","11:03","11:07","11:09","11:11","11:13","11:16","11:21","11:23","11:27","11:30","11:32","11:35","11:40"]},
-          {"trainNo":"9317","times":["11:50","11:53","11:58","12:03","12:07","12:09","12:11","12:13","12:16","12:21","12:23","12:27","12:30","12:32","12:35","12:40"]},
-          {"trainNo":"9321","times":["12:50","12:53","12:58","13:03","13:07","13:09","13:11","13:13","13:16","13:21","13:23","13:27","13:30","13:32","13:35","13:40"]},
-          {"trainNo":"9323","times":["13:50","13:53","13:58","14:03","14:07","14:09","14:11","14:13","14:16","14:21","14:23","14:27","14:30","14:32","14:35","14:40"]},
-          {"trainNo":"9325","times":["14:50","14:53","14:58","15:03","15:07","15:09","15:11","15:13","15:16","15:21","15:23","15:27","15:30","15:32","15:35","15:40"]},
-          {"trainNo":"9327","times":["16:10","16:13","16:18","16:23","16:27","16:29","16:31","16:33","16:36","16:41","16:43","16:47","16:50","16:52","16:55","17:00"]},
-          {"trainNo":"9329","times":["18:00","18:03","18:08","18:13","18:17","18:19","18:21","18:23","18:26","18:31","18:33","18:37","18:40","18:42","18:45","18:50"]}
+    saturday: {
+      inbound: {
+        stations: ["Midway","Tshiawelo","Kliptown","Nancefield","Orlando","Mlamlankunzi","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9103",t:["06:00","06:05","06:12","06:18","06:23","06:26","06:31","06:37","06:40","06:46","06:51","06:54","06:58","07:05"]},
+          {no:"9105",t:["08:30","08:35","08:42","08:48","08:53","08:56","09:01","09:07","09:10","09:16","09:21","09:24","09:28","09:35"]},
+          {no:"9107",t:["11:30","11:35","11:42","11:48","11:53","11:56","12:01","12:07","12:10","12:16","12:21","12:24","12:28","12:35"]},
+          {no:"9109",t:["14:30","14:35","14:42","14:48","14:53","14:56","15:01","15:07","15:10","15:16","15:21","15:24","15:28","15:35"]},
+          {no:"9111",t:["17:00","17:05","17:12","17:18","17:23","17:26","17:31","17:37","17:40","17:46","17:51","17:54","17:58","18:05"]}
         ]
       },
-      "direction_outbound": {
-        "stations": ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mzimhlope","Phomolong","Phefen","Dube","Ikwezi","Inhlazane","Merafe","Naledi"],
-        "trains": [
-          {"trainNo":"9306","times":["06:30","06:34","06:38","06:40","06:43","06:46","06:48","06:53","06:56","06:59","07:01","07:03","07:07","07:11","07:16","07:20"]},
-          {"trainNo":"9308","times":["07:30","07:34","07:38","07:40","07:43","07:46","07:48","07:53","07:56","07:59","08:01","08:03","08:07","08:11","08:16","08:20"]},
-          {"trainNo":"9310","times":["08:50","08:54","08:58","09:00","09:03","09:06","09:08","09:13","09:16","09:19","09:21","09:23","09:27","09:31","09:36","09:40"]},
-          {"trainNo":"9312","times":["09:50","09:54","09:58","10:00","10:03","10:06","10:08","10:13","10:16","10:19","10:21","10:23","10:27","10:31","10:36","10:40"]},
-          {"trainNo":"9314","times":["10:50","10:54","10:58","11:00","11:03","11:06","11:08","11:13","11:16","11:19","11:21","11:23","11:27","11:31","11:36","11:40"]},
-          {"trainNo":"9316","times":["11:50","11:54","11:58","12:00","12:03","12:06","12:08","12:13","12:16","12:19","12:21","12:23","12:27","12:31","12:36","12:40"]},
-          {"trainNo":"9318","times":["12:50","12:54","12:58","13:00","13:03","13:06","13:08","13:13","13:16","13:19","13:21","13:23","13:27","13:31","13:36","13:40"]},
-          {"trainNo":"9322","times":["13:50","13:54","13:58","14:00","14:03","14:06","14:08","14:13","14:16","14:19","14:21","14:23","14:27","14:31","14:36","14:40"]},
-          {"trainNo":"9324","times":["15:10","15:14","15:18","15:20","15:23","15:26","15:28","15:33","15:36","15:39","15:41","15:43","15:47","15:51","15:56","16:00"]},
-          {"trainNo":"9326","times":["16:30","16:34","16:38","16:40","16:43","16:46","16:48","16:53","16:56","16:59","17:01","17:03","17:07","17:11","17:16","17:20"]},
-          {"trainNo":"9328","times":["17:30","17:34","17:38","17:40","17:43","17:46","17:48","17:53","17:56","17:59","18:01","18:03","18:07","18:11","18:16","18:20"]},
-          {"trainNo":"9332","times":["18:30","18:34","18:38","18:40","18:43","18:46","18:48","18:53","18:56","18:59","19:01","19:03","19:07","19:11","19:16","19:20"]},
-          {"trainNo":"9334","times":["19:20","19:24","19:28","19:30","19:33","19:36","19:38","19:43","19:46","19:49","19:51","19:53","19:57","20:01","20:06","20:10"]}
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mlamlankunzi","Orlando","Nancefield","Kliptown","Tshiawelo","Midway"],
+        trains: [
+          {no:"9104",t:["07:30","07:38","07:44","07:47","07:51","07:56","07:59","08:06","08:10","08:15","08:20","08:26","08:31","08:35"]},
+          {no:"9106",t:["10:00","10:08","10:14","10:17","10:21","10:26","10:29","10:36","10:40","10:45","10:50","10:56","11:01","11:05"]},
+          {no:"9108",t:["13:00","13:08","13:14","13:17","13:21","13:26","13:29","13:36","13:40","13:45","13:50","13:56","14:01","14:05"]},
+          {no:"9110",t:["15:45","15:53","15:59","16:02","16:06","16:11","16:14","16:21","16:25","16:30","16:35","16:41","16:46","16:50"]},
+          {no:"9112",t:["18:30","18:38","18:44","18:47","18:51","18:56","18:59","19:06","19:10","19:15","19:20","19:26","19:31","19:35"]}
+        ]
+      }
+    },
+    sunday: {
+      inbound: {
+        stations: ["Midway","Tshiawelo","Kliptown","Nancefield","Orlando","Mlamlankunzi","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9203",t:["08:00","08:05","08:12","08:18","08:23","08:26","08:31","08:37","08:40","08:46","08:51","08:54","08:58","09:05"]},
+          {no:"9205",t:["12:00","12:05","12:12","12:18","12:23","12:26","12:31","12:37","12:40","12:46","12:51","12:54","12:58","13:05"]},
+          {no:"9207",t:["16:30","16:35","16:42","16:48","16:53","16:56","17:01","17:07","17:10","17:16","17:21","17:24","17:28","17:35"]}
+        ]
+      },
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mlamlankunzi","Orlando","Nancefield","Kliptown","Tshiawelo","Midway"],
+        trains: [
+          {no:"9204",t:["09:30","09:38","09:44","09:47","09:51","09:56","09:59","10:06","10:10","10:15","10:20","10:26","10:31","10:35"]},
+          {no:"9206",t:["13:30","13:38","13:44","13:47","13:51","13:56","13:59","14:06","14:10","14:15","14:20","14:26","14:31","14:35"]},
+          {no:"9208",t:["17:45","17:53","17:59","18:02","18:06","18:11","18:14","18:21","18:25","18:30","18:35","18:41","18:46","18:50"]}
         ]
       }
     }
   },
-  "stationCoordinates": {
-    "Midway": {"lat": -26.267, "lon": 27.842},
-    "Tshiawelo": {"lat": -26.258, "lon": 27.855},
-    "Kliptown": {"lat": -26.247, "lon": 27.867},
-    "Nancefield": {"lat": -26.241, "lon": 27.878},
-    "Orlando": {"lat": -26.235, "lon": 27.889},
-    "Mlamlankunzi": {"lat": -26.233, "lon": 27.898},
-    "New Canada": {"lat": -26.232, "lon": 27.990},
-    "Longdale": {"lat": -26.227, "lon": 27.995},
-    "Croesus": {"lat": -26.221, "lon": 28.000},
-    "Langlaagte": {"lat": -26.216, "lon": 28.005},
-    "Grosvenor": {"lat": -26.211, "lon": 28.012},
-    "Mayfair": {"lat": -26.202, "lon": 28.021},
-    "Braamfontein": {"lat": -26.192, "lon": 28.032},
-    "Johannesburg": {"lat": -26.204, "lon": 28.047},
-    "Naledi": {"lat": -26.273, "lon": 27.854},
-    "Merafe": {"lat": -26.265, "lon": 27.863},
-    "Inhlazane": {"lat": -26.258, "lon": 27.872},
-    "Ikwezi": {"lat": -26.250, "lon": 27.881},
-    "Dube": {"lat": -26.244, "lon": 27.890},
-    "Phefen": {"lat": -26.240, "lon": 27.896},
-    "Phomolong": {"lat": -26.237, "lon": 27.902},
-    "Mzimhlope": {"lat": -26.235, "lon": 27.908}
-  }
-};
-  // ----------------------------- APP LOGIC ---------------------------------
-  let allStations = [];
-  const originSelect = document.getElementById('originSelect');
-  const destSelect = document.getElementById('destSelect');
-  const gpsBtn = document.getElementById('gpsBtn');
-  const findBtn = document.getElementById('findBtn');
-  const resultDiv = document.getElementById('resultArea');
-  const expertBtn = document.getElementById('expertBtn');
-  const expertPanel = document.getElementById('expertPanel');
-  let currentFullTT = [];
 
-  // Build station list from both lines (unique, sorted)
-  function buildStationList() {
-    const mids = SCHEDULE_DATA.lines.midway_joburg.direction_inbound.stations;
-    const nals = SCHEDULE_DATA.lines.naledi_joburg.direction_inbound.stations;
-    const set = new Set([...mids, ...nals]);
-    return Array.from(set).sort();
-  }
-
-  function populateSelectors() {
-    allStations = buildStationList();
-    originSelect.innerHTML = '<option value="">-- Select station --</option>';
-    destSelect.innerHTML = '<option value="">-- Select station --</option>';
-    allStations.forEach(st => {
-      originSelect.add(new Option(st, st));
-      destSelect.add(new Option(st, st));
-    });
-  }
-
-  // Helper: find which line and direction for a given origin & destination (direct, no transfer)
-  function findDirectJourney(origin, dest) {
-    // try both lines, both directions
-    for (let [lineName, lineData] of Object.entries(SCHEDULE_DATA.lines)) {
-      for (let [dirName, dirObj] of Object.entries(lineData)) {
-        const stations = dirObj.stations;
-        const originIdx = stations.indexOf(origin);
-        const destIdx = stations.indexOf(dest);
-        if (originIdx !== -1 && destIdx !== -1 && originIdx < destIdx) {
-          // direction matches: origin before dest in this timetable
-          // find next train after current time
-          const now = new Date();
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          let bestTrain = null;
-          let bestDepartMinutes = Infinity;
-          for (let train of dirObj.trains) {
-            const departStr = train.times[originIdx];
-            const [h,m] = departStr.split(':').map(Number);
-            const trainMinutes = h*60+m;
-            if (trainMinutes >= currentMinutes && trainMinutes < bestDepartMinutes) {
-              bestDepartMinutes = trainMinutes;
-              bestTrain = { trainNo: train.trainNo, departTime: departStr, arrivalTime: train.times[destIdx] };
-            }
-          }
-          if (bestTrain) return { type: 'direct', line: lineName, direction: dirName, ...bestTrain, origin, dest };
-        }
+  naledi_joburg: {
+    weekday: {
+      inbound: {
+        stations: ["Naledi","Merafe","Inhlazane","Ikwezi","Dube","Phefen","Phomolong","Mzimhlope","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9301",t:["04:20","04:23","04:28","04:33","04:37","04:39","04:41","04:43","04:46","04:51","04:53","04:57","05:00","05:02","05:05","05:10"]},
+          {no:"9303",t:["05:00","05:03","05:08","05:13","05:17","05:19","05:21","05:23","05:26","05:31","05:33","05:37","05:40","05:42","05:45","05:50"]},
+          {no:"9305",t:["05:30","05:33","05:38","05:43","05:47","05:49","05:51","05:53","05:56","06:01","06:03","06:07","06:10","06:12","06:15","06:20"]},
+          {no:"9307",t:["06:15","06:18","06:23","06:28","06:32","06:34","06:36","06:38","06:41","06:46","06:48","06:52","06:55","06:57","07:00","07:05"]},
+          {no:"9309",t:["07:30","07:33","07:38","07:43","07:47","07:49","07:51","07:53","07:56","08:01","08:03","08:07","08:10","08:12","08:15","08:20"]},
+          {no:"9311",t:["08:50","08:53","08:58","09:03","09:07","09:09","09:11","09:13","09:16","09:21","09:23","09:27","09:30","09:32","09:35","09:40"]},
+          {no:"9313",t:["09:50","09:53","09:58","10:03","10:07","10:09","10:11","10:13","10:16","10:21","10:23","10:27","10:30","10:32","10:35","10:40"]},
+          {no:"9315",t:["10:50","10:53","10:58","11:03","11:07","11:09","11:11","11:13","11:16","11:21","11:23","11:27","11:30","11:32","11:35","11:40"]},
+          {no:"9317",t:["11:50","11:53","11:58","12:03","12:07","12:09","12:11","12:13","12:16","12:21","12:23","12:27","12:30","12:32","12:35","12:40"]},
+          {no:"9321",t:["12:50","12:53","12:58","13:03","13:07","13:09","13:11","13:13","13:16","13:21","13:23","13:27","13:30","13:32","13:35","13:40"]},
+          {no:"9323",t:["13:50","13:53","13:58","14:03","14:07","14:09","14:11","14:13","14:16","14:21","14:23","14:27","14:30","14:32","14:35","14:40"]},
+          {no:"9325",t:["14:50","14:53","14:58","15:03","15:07","15:09","15:11","15:13","15:16","15:21","15:23","15:27","15:30","15:32","15:35","15:40"]},
+          {no:"9327",t:["16:10","16:13","16:18","16:23","16:27","16:29","16:31","16:33","16:36","16:41","16:43","16:47","16:50","16:52","16:55","17:00"]},
+          {no:"9329",t:["18:00","18:03","18:08","18:13","18:17","18:19","18:21","18:23","18:26","18:31","18:33","18:37","18:40","18:42","18:45","18:50"]}
+        ]
+      },
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mzimhlope","Phomolong","Phefen","Dube","Ikwezi","Inhlazane","Merafe","Naledi"],
+        trains: [
+          {no:"9306",t:["06:30","06:34","06:38","06:40","06:43","06:46","06:48","06:53","06:56","06:59","07:01","07:03","07:07","07:11","07:16","07:20"]},
+          {no:"9308",t:["07:30","07:34","07:38","07:40","07:43","07:46","07:48","07:53","07:56","07:59","08:01","08:03","08:07","08:11","08:16","08:20"]},
+          {no:"9310",t:["08:50","08:54","08:58","09:00","09:03","09:06","09:08","09:13","09:16","09:19","09:21","09:23","09:27","09:31","09:36","09:40"]},
+          {no:"9312",t:["09:50","09:54","09:58","10:00","10:03","10:06","10:08","10:13","10:16","10:19","10:21","10:23","10:27","10:31","10:36","10:40"]},
+          {no:"9314",t:["10:50","10:54","10:58","11:00","11:03","11:06","11:08","11:13","11:16","11:19","11:21","11:23","11:27","11:31","11:36","11:40"]},
+          {no:"9316",t:["11:50","11:54","11:58","12:00","12:03","12:06","12:08","12:13","12:16","12:19","12:21","12:23","12:27","12:31","12:36","12:40"]},
+          {no:"9318",t:["12:50","12:54","12:58","13:00","13:03","13:06","13:08","13:13","13:16","13:19","13:21","13:23","13:27","13:31","13:36","13:40"]},
+          {no:"9322",t:["13:50","13:54","13:58","14:00","14:03","14:06","14:08","14:13","14:16","14:19","14:21","14:23","14:27","14:31","14:36","14:40"]},
+          {no:"9324",t:["15:10","15:14","15:18","15:20","15:23","15:26","15:28","15:33","15:36","15:39","15:41","15:43","15:47","15:51","15:56","16:00"]},
+          {no:"9326",t:["16:30","16:34","16:38","16:40","16:43","16:46","16:48","16:53","16:56","16:59","17:01","17:03","17:07","17:11","17:16","17:20"]},
+          {no:"9328",t:["17:30","17:34","17:38","17:40","17:43","17:46","17:48","17:53","17:56","17:59","18:01","18:03","18:07","18:11","18:16","18:20"]},
+          {no:"9332",t:["18:30","18:34","18:38","18:40","18:43","18:46","18:48","18:53","18:56","18:59","19:01","19:03","19:07","19:11","19:16","19:20"]},
+          {no:"9334",t:["19:20","19:24","19:28","19:30","19:33","19:36","19:38","19:43","19:46","19:49","19:51","19:53","19:57","20:01","20:06","20:10"]}
+        ]
+      }
+    },
+    saturday: {
+      inbound: {
+        stations: ["Naledi","Merafe","Inhlazane","Ikwezi","Dube","Phefen","Phomolong","Mzimhlope","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9401",t:["06:30","06:33","06:38","06:43","06:47","06:49","06:51","06:53","06:56","07:01","07:03","07:07","07:10","07:12","07:15","07:20"]},
+          {no:"9403",t:["08:00","08:03","08:08","08:13","08:17","08:19","08:21","08:23","08:26","08:31","08:33","08:37","08:40","08:42","08:45","08:50"]},
+          {no:"9405",t:["10:00","10:03","10:08","10:13","10:17","10:19","10:21","10:23","10:26","10:31","10:33","10:37","10:40","10:42","10:45","10:50"]},
+          {no:"9407",t:["12:00","12:03","12:08","12:13","12:17","12:19","12:21","12:23","12:26","12:31","12:33","12:37","12:40","12:42","12:45","12:50"]},
+          {no:"9409",t:["14:30","14:33","14:38","14:43","14:47","14:49","14:51","14:53","14:56","15:01","15:03","15:07","15:10","15:12","15:15","15:20"]},
+          {no:"9411",t:["17:00","17:03","17:08","17:13","17:17","17:19","17:21","17:23","17:26","17:31","17:33","17:37","17:40","17:42","17:45","17:50"]}
+        ]
+      },
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mzimhlope","Phomolong","Phefen","Dube","Ikwezi","Inhlazane","Merafe","Naledi"],
+        trains: [
+          {no:"9402",t:["07:30","07:34","07:38","07:40","07:43","07:46","07:48","07:53","07:56","07:59","08:01","08:03","08:07","08:11","08:16","08:20"]},
+          {no:"9404",t:["09:10","09:14","09:18","09:20","09:23","09:26","09:28","09:33","09:36","09:39","09:41","09:43","09:47","09:51","09:56","10:00"]},
+          {no:"9406",t:["11:10","11:14","11:18","11:20","11:23","11:26","11:28","11:33","11:36","11:39","11:41","11:43","11:47","11:51","11:56","12:00"]},
+          {no:"9408",t:["13:10","13:14","13:18","13:20","13:23","13:26","13:28","13:33","13:36","13:39","13:41","13:43","13:47","13:51","13:56","14:00"]},
+          {no:"9410",t:["15:30","15:34","15:38","15:40","15:43","15:46","15:48","15:53","15:56","15:59","16:01","16:03","16:07","16:11","16:16","16:20"]},
+          {no:"9412",t:["18:10","18:14","18:18","18:20","18:23","18:26","18:28","18:33","18:36","18:39","18:41","18:43","18:47","18:51","18:56","19:00"]}
+        ]
+      }
+    },
+    sunday: {
+      inbound: {
+        stations: ["Naledi","Merafe","Inhlazane","Ikwezi","Dube","Phefen","Phomolong","Mzimhlope","New Canada","Longdale","Croesus","Langlaagte","Grosvenor","Mayfair","Braamfontein","Johannesburg"],
+        trains: [
+          {no:"9501",t:["09:00","09:03","09:08","09:13","09:17","09:19","09:21","09:23","09:26","09:31","09:33","09:37","09:40","09:42","09:45","09:50"]},
+          {no:"9503",t:["13:00","13:03","13:08","13:13","13:17","13:19","13:21","13:23","13:26","13:31","13:33","13:37","13:40","13:42","13:45","13:50"]},
+          {no:"9505",t:["17:00","17:03","17:08","17:13","17:17","17:19","17:21","17:23","17:26","17:31","17:33","17:37","17:40","17:42","17:45","17:50"]}
+        ]
+      },
+      outbound: {
+        stations: ["Johannesburg","Braamfontein","Mayfair","Grosvenor","Langlaagte","Croesus","Longdale","New Canada","Mzimhlope","Phomolong","Phefen","Dube","Ikwezi","Inhlazane","Merafe","Naledi"],
+        trains: [
+          {no:"9502",t:["10:10","10:14","10:18","10:20","10:23","10:26","10:28","10:33","10:36","10:39","10:41","10:43","10:47","10:51","10:56","11:00"]},
+          {no:"9504",t:["14:10","14:14","14:18","14:20","14:23","14:26","14:28","14:33","14:36","14:39","14:41","14:43","14:47","14:51","14:56","15:00"]},
+          {no:"9506",t:["18:10","18:14","18:18","18:20","18:23","18:26","18:28","18:33","18:36","18:39","18:41","18:43","18:47","18:51","18:56","19:00"]}
+        ]
       }
     }
-    return null;
+  }
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentDayType = 'weekday';
+let allJourneys = [];
+let selectedIdx = 0;
+
+const originSelect  = document.getElementById('originSelect');
+const destSelect    = document.getElementById('destSelect');
+const resultArea    = document.getElementById('resultArea');
+const trainsPanelEl = document.getElementById('trainsPanel');
+
+// ─── DAY TYPE ─────────────────────────────────────────────────────────────────
+function autoDetectDay() {
+  const d = new Date().getDay();
+  if (d === 6) return 'saturday';
+  if (d === 0) return 'sunday';
+  return 'weekday';
+}
+
+function toggleDayPicker() {
+  document.getElementById('dayPicker').classList.toggle('open');
+}
+
+function setDayType(type) {
+  currentDayType = type;
+
+  const dot       = document.getElementById('dayDot');
+  const label     = document.getElementById('dayBadgeLabel');
+  const sub       = document.getElementById('dayBadgeSub');
+  const findBtn   = document.getElementById('findBtn');
+  const headerSub = document.getElementById('headerSub');
+
+  dot.className     = 'day-dot';
+  findBtn.className = 'find-btn';
+
+  if (type === 'weekday') {
+    label.textContent = 'Weekday schedule';
+    sub.textContent   = 'Mon\u2013Fri \u00b7 Full service';
+    headerSub.textContent = 'Soweto lines \u00b7 Weekdays';
+  } else if (type === 'saturday') {
+    dot.classList.add('weekend');
+    findBtn.classList.add('weekend');
+    label.textContent = 'Saturday schedule';
+    sub.textContent   = 'Reduced service \u00b7 5\u20136 trains';
+    headerSub.textContent = 'Soweto lines \u00b7 Saturday';
+  } else {
+    dot.classList.add('weekend');
+    findBtn.classList.add('weekend');
+    label.textContent = 'Sunday schedule';
+    sub.textContent   = 'Limited service \u00b7 3 trains only';
+    headerSub.textContent = 'Soweto lines \u00b7 Sunday';
   }
 
-  // Transfer via New Canada
-  function findTransferViaNewCanada(origin, dest) {
-    // First leg: origin -> New Canada
-    const leg1 = findDirectJourney(origin, 'New Canada');
-    if (!leg1) return null;
-    // Second leg: New Canada -> dest (must depart after arrival at New Canada)
-    const arrivalAtNewCanada = leg1.arrivalTime;
-    const [arrH, arrM] = arrivalAtNewCanada.split(':').map(Number);
-    const arrivalMinutes = arrH*60+arrM;
-    let bestLeg2 = null;
-    for (let [lineName, lineData] of Object.entries(SCHEDULE_DATA.lines)) {
-      for (let [dirName, dirObj] of Object.entries(lineData)) {
-        const stations = dirObj.stations;
-        const idxNew = stations.indexOf('New Canada');
-        const idxDest = stations.indexOf(dest);
-        if (idxNew !== -1 && idxDest !== -1 && idxNew < idxDest) {
-          for (let train of dirObj.trains) {
-            const departFromNew = train.times[idxNew];
-            const [dH, dM] = departFromNew.split(':').map(Number);
-            const departMinutes = dH*60+dM;
-            if (departMinutes >= arrivalMinutes + 1) { // at least 1 min transfer
-              bestLeg2 = { trainNo: train.trainNo, departTime: departFromNew, arrivalTime: train.times[idxDest] };
+  document.getElementById('pickWeekday').className  = 'day-pick-btn' + (type === 'weekday'  ? ' active' : '');
+  document.getElementById('pickSaturday').className = 'day-pick-btn' + (type === 'saturday' ? ' active weekend' : '');
+  document.getElementById('pickSunday').className   = 'day-pick-btn' + (type === 'sunday'   ? ' active weekend' : '');
+
+  document.getElementById('dayPicker').classList.remove('open');
+
+  if (allJourneys.length > 0) handleFind();
+}
+
+// ─── STATIONS ─────────────────────────────────────────────────────────────────
+function buildStationList() {
+  const s = new Set();
+  for (const line of Object.values(SCHEDULE))
+    for (const dayData of Object.values(line))
+      for (const dir of Object.values(dayData))
+        dir.stations.forEach(st => s.add(st));
+  return Array.from(s).sort();
+}
+
+function populateSelectors() {
+  const stations = buildStationList();
+  originSelect.innerHTML = '<option value="">Select departure station</option>';
+  destSelect.innerHTML   = '<option value="">Select arrival station</option>';
+  stations.forEach(st => {
+    originSelect.add(new Option(st, st));
+    destSelect.add(new Option(st, st));
+  });
+}
+
+// ─── TIME HELPERS ─────────────────────────────────────────────────────────────
+function toMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+function nowMins() { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
+
+function formatEta(t) {
+  const diff = toMins(t) - nowMins();
+  if (diff <= 0) return 'due now';
+  if (diff < 60)  return 'in ' + diff + ' min';
+  const h = Math.floor(diff / 60), m = diff % 60;
+  return m === 0 ? 'in ' + h + 'h' : 'in ' + h + 'h ' + m + 'm';
+}
+
+// ─── JOURNEY FINDER ───────────────────────────────────────────────────────────
+function getDirData(lineKey) {
+  const d = SCHEDULE[lineKey][currentDayType];
+  return d ? [d.inbound, d.outbound] : [];
+}
+
+function findAllDirect(origin, dest) {
+  const results = [];
+  for (const lineKey of Object.keys(SCHEDULE)) {
+    for (const dir of getDirData(lineKey)) {
+      const oi = dir.stations.indexOf(origin);
+      const di = dir.stations.indexOf(dest);
+      if (oi !== -1 && di !== -1 && oi < di) {
+        for (const train of dir.trains)
+          results.push({ type:'direct', trainNo:train.no, departTime:train.t[oi], arrivalTime:train.t[di], origin, dest });
+      }
+    }
+  }
+  return results.sort((a, b) => toMins(a.departTime) - toMins(b.departTime));
+}
+
+function findAllTransfer(origin, dest) {
+  const leg1s = [];
+  for (const lineKey of Object.keys(SCHEDULE)) {
+    for (const dir of getDirData(lineKey)) {
+      const oi = dir.stations.indexOf(origin);
+      const ni = dir.stations.indexOf('New Canada');
+      if (oi !== -1 && ni !== -1 && oi < ni)
+        for (const train of dir.trains)
+          leg1s.push({ trainNo:train.no, departTime:train.t[oi], arrivalAtNC:train.t[ni] });
+    }
+  }
+  const results = [];
+  for (const leg1 of leg1s) {
+    const arrMins = toMins(leg1.arrivalAtNC);
+    for (const lineKey of Object.keys(SCHEDULE)) {
+      for (const dir of getDirData(lineKey)) {
+        const ni = dir.stations.indexOf('New Canada');
+        const di = dir.stations.indexOf(dest);
+        if (ni !== -1 && di !== -1 && ni < di) {
+          for (const train of dir.trains) {
+            if (toMins(train.t[ni]) >= arrMins + 1) {
+              results.push({
+                type: 'transfer',
+                trainNo: leg1.trainNo + '+' + train.no,
+                departTime: leg1.departTime,
+                arrivalTime: train.t[di],
+                leg1: { trainNo:leg1.trainNo, departTime:leg1.departTime, arrivalAtNC:leg1.arrivalAtNC },
+                leg2: { trainNo:train.no, departFromNC:train.t[ni], arrivalTime:train.t[di] },
+                origin, dest
+              });
               break;
             }
           }
         }
-        if (bestLeg2) break;
-      }
-      if (bestLeg2) break;
-    }
-    if (!bestLeg2) return null;
-    return { type: 'transfer', leg1, leg2: bestLeg2 };
-  }
-
-  function getNextJourney(origin, dest) {
-    if (!origin || !dest || origin === dest) return null;
-    let direct = findDirectJourney(origin, dest);
-    if (direct) return direct;
-    let transfer = findTransferViaNewCanada(origin, dest);
-    if (transfer) return transfer;
-    // fallback: next train from origin towards any direction? expert view
-    return null;
-  }
-
-  function formatCountdown(departTimeStr) {
-    const now = new Date();
-    const [h,m] = departTimeStr.split(':').map(Number);
-    const departDate = new Date();
-    departDate.setHours(h, m, 0, 0);
-    if (departDate < now) departDate.setDate(departDate.getDate() + 1); // next day
-    const diffMs = departDate - now;
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 0) return "now";
-    if (minutes === 0) return "due";
-    return `in ${minutes} min`;
-  }
-
-  function updateDisplay() {
-    const origin = originSelect.value;
-    const dest = destSelect.value;
-    if (!origin || !dest) {
-      resultDiv.innerHTML = `<div style="font-size:1rem;">📍 Select origin and destination</div>`;
-      return;
-    }
-    const journey = getNextJourney(origin, dest);
-    if (!journey) {
-      // show next train from origin any direction as expert
-      const anyTrain = getAnyNextTrainFromOrigin(origin);
-      resultDiv.innerHTML = `
-        <div>⚠️ No complete journey found.<br>Next train from ${origin} towards any direction: ${anyTrain ? anyTrain.departTime : 'none today'}</div>
-        <div class="small-info">👉 Tap "Expert view" below for full timetable.</div>
-      `;
-      return;
-    }
-    if (journey.type === 'direct') {
-      const countdown = formatCountdown(journey.departTime);
-      resultDiv.innerHTML = `
-        <div>🚆 Direct train ${journey.trainNo}</div>
-        <div class="countdown">${countdown}</div>
-        <div class="departure-time">Departs ${journey.departTime}</div>
-        <div class="small-info">Arrives ${journey.arrivalTime} at ${journey.dest}</div>
-        <button id="voiceBtn" class="voice-btn">🔊 Read aloud</button>
-      `;
-      document.getElementById('voiceBtn')?.addEventListener('click', () => {
-        const msg = `Your next train from ${journey.origin} to ${journey.dest} leaves at ${journey.departTime}, that's ${countdown.replace('in ','')}.`;
-        speak(msg);
-      });
-    } else {
-      // transfer
-      const leg1dep = journey.leg1.departTime;
-      const leg1arr = journey.leg1.arrivalTime;
-      const leg2dep = journey.leg2.departTime;
-      const leg2arr = journey.leg2.arrivalTime;
-      const countdown = formatCountdown(leg1dep);
-      resultDiv.innerHTML = `
-        <div>🔄 Transfer at New Canada</div>
-        <div class="countdown">${countdown}</div>
-        <div>🚉 1st train ${journey.leg1.trainNo} departs ${leg1dep} → arrives New Canada ${leg1arr}</div>
-        <div>🚉 2nd train ${journey.leg2.trainNo} departs New Canada ${leg2dep} → arrives ${dest} ${leg2arr}</div>
-        <button id="voiceBtn" class="voice-btn">🔊 Read aloud</button>
-      `;
-      document.getElementById('voiceBtn')?.addEventListener('click', () => {
-        speak(`Your journey from ${origin} to ${dest}: first train at ${leg1dep}, change at New Canada, second train at ${leg2dep}.`);
-      });
-    }
-  }
-
-  function getAnyNextTrainFromOrigin(origin) {
-    for (let [lineName, lineData] of Object.entries(SCHEDULE_DATA.lines)) {
-      for (let [dirName, dirObj] of Object.entries(lineData)) {
-        const idx = dirObj.stations.indexOf(origin);
-        if (idx !== -1) {
-          const now = new Date();
-          const currentMins = now.getHours()*60+now.getMinutes();
-          for (let train of dirObj.trains) {
-            const dep = train.times[idx];
-            const [h,m] = dep.split(':').map(Number);
-            if (h*60+m >= currentMins) return { departTime: dep, trainNo: train.trainNo, direction: dirName };
-          }
-        }
       }
     }
-    return null;
   }
+  return results.sort((a, b) => toMins(a.departTime) - toMins(b.departTime));
+}
 
-  function showFullTimetable() {
-    const origin = originSelect.value;
-    if (!origin) { expertPanel.innerHTML = '<div>Select an origin station first.</div>'; return; }
-    let html = '<strong>📅 Full weekday schedule from ' + origin + '</strong><ul style="margin-top:8px;">';
-    for (let [lineName, lineData] of Object.entries(SCHEDULE_DATA.lines)) {
-      for (let [dirName, dirObj] of Object.entries(lineData)) {
-        const idx = dirObj.stations.indexOf(origin);
-        if (idx !== -1) {
-          const directionLabel = dirName === 'direction_inbound' ? '→ towards Johannesburg' : '← away from Joburg';
-          html += `<li><strong>${directionLabel}</strong><br>`;
-          for (let train of dirObj.trains) {
-            html += `🚆 ${train.trainNo} departs ${train.times[idx]}<br>`;
-          }
-          html += `</li>`;
-        }
-      }
-    }
-    html += '</ul>';
-    expertPanel.innerHTML = html;
-    expertPanel.classList.add('show');
+function getAllJourneys(origin, dest) {
+  if (!origin || !dest || origin === dest) return [];
+  const direct = findAllDirect(origin, dest);
+  return direct.length ? direct : findAllTransfer(origin, dest);
+}
+
+function findNextIdx(journeys) {
+  const now = nowMins();
+  for (let i = 0; i < journeys.length; i++)
+    if (toMins(journeys[i].departTime) >= now) return i;
+  return journeys.length - 1;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+const isWeekend = () => currentDayType !== 'weekday';
+
+function renderResult(j) {
+  if (!j) {
+    resultArea.innerHTML = '<div class="result-card"><div class="empty-state"><div class="icon">&#128683;</div>No more trains today on this route.</div></div>';
+    return;
   }
+  const wknd      = isWeekend();
+  const eta       = formatEta(j.departTime);
+  const hdrCls    = wknd ? 'result-header weekend' : 'result-header';
+  const tagCls    = wknd ? 'result-tag weekend'    : 'result-tag';
+  const cntCls    = wknd ? 'result-countdown weekend' : 'result-countdown';
 
-  function speak(text) {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-ZA';
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert("Voice not supported on this device.");
-    }
+  if (j.type === 'direct') {
+    resultArea.innerHTML =
+      '<div class="result-card">' +
+        '<div class="' + hdrCls + '">' +
+          '<div class="' + tagCls + '">Direct &middot; Train ' + j.trainNo + '</div>' +
+          '<div class="' + cntCls + '">' + eta + '</div>' +
+        '</div>' +
+        '<div class="result-body">' +
+          '<div class="result-row"><span class="label">Departs ' + j.origin + '</span><span class="value">' + j.departTime + '</span></div>' +
+          '<div class="result-row"><span class="label">Arrives ' + j.dest + '</span><span class="value">' + j.arrivalTime + '</span></div>' +
+        '</div>' +
+      '</div>';
+  } else {
+    resultArea.innerHTML =
+      '<div class="result-card">' +
+        '<div class="' + hdrCls + '">' +
+          '<div class="' + tagCls + '">Transfer route</div>' +
+          '<div class="' + cntCls + '">' + eta + '</div>' +
+        '</div>' +
+        '<div class="result-body">' +
+          '<div class="transfer-badge">Change at New Canada</div>' +
+          '<div class="result-row"><span class="label">Train ' + j.leg1.trainNo + ' departs ' + j.origin + '</span><span class="value">' + j.leg1.departTime + '</span></div>' +
+          '<div class="result-row"><span class="label">Arrives New Canada</span><span class="value">' + j.leg1.arrivalAtNC + '</span></div>' +
+          '<div class="result-row"><span class="label">Train ' + j.leg2.trainNo + ' departs New Canada</span><span class="value">' + j.leg2.departFromNC + '</span></div>' +
+          '<div class="result-row"><span class="label">Arrives ' + j.dest + '</span><span class="value">' + j.leg2.arrivalTime + '</span></div>' +
+        '</div>' +
+      '</div>';
   }
+}
 
-  // GPS nearest station
-  function nearestStation(lat, lon) {
-    let nearest = null;
-    let minDist = Infinity;
-    for (let [name, coord] of Object.entries(SCHEDULE_DATA.stationCoordinates)) {
-      const d = Math.hypot(lat - coord.lat, lon - coord.lon);
-      if (d < minDist) {
-        minDist = d;
-        nearest = name;
-      }
-    }
-    return nearest;
-  }
+function renderTrainsPanel(journeys, selIdx) {
+  if (!journeys.length) { trainsPanelEl.innerHTML = ''; return; }
+  const now  = nowMins();
+  const wknd = isWeekend();
+  let html = '<div class="trains-panel">' +
+    '<div class="trains-panel-header">' +
+      '<span>All trains today (' + journeys.length + ')</span>' +
+      '<button class="close-btn" onclick="document.getElementById(\'trainsPanel\').innerHTML=\'\'">Close</button>' +
+    '</div>';
 
-  gpsBtn.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      alert("GPS not supported.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(pos => {
-      const nearest = nearestStation(pos.coords.latitude, pos.coords.longitude);
-      if (nearest) {
-        originSelect.value = nearest;
-        updateDisplay();
-      } else {
-        alert("Could not find nearby station.");
-      }
-    }, () => alert("GPS access denied or failed."));
+  journeys.forEach((j, i) => {
+    const past = toMins(j.departTime) < now;
+    const sel  = i === selIdx;
+    const eta  = past ? '<span style="color:#9ca3af;font-style:italic">departed</span>' : formatEta(j.departTime);
+    const tn   = j.type === 'transfer' ? j.leg1.trainNo + ' + ' + j.leg2.trainNo : j.trainNo;
+    const cls  = ['train-row', sel ? 'selected' : '', past ? 'past' : '', sel && wknd ? 'weekend-row' : ''].filter(Boolean).join(' ');
+    html +=
+      '<div class="' + cls + '" onclick="selectTrain(' + i + ')">' +
+        '<span class="train-no">' + tn + '</span>' +
+        '<span class="train-times">' + j.departTime + ' <span class="arrow">&#8594;</span> <span class="arr">' + j.arrivalTime + '</span></span>' +
+        '<span class="train-eta">' + eta + '</span>' +
+      '</div>';
   });
+  html += '</div>';
+  trainsPanelEl.innerHTML = html;
+}
 
-  findBtn.addEventListener('click', updateDisplay);
-  expertBtn.addEventListener('click', () => {
-    showFullTimetable();
-  });
+function selectTrain(idx) {
+  selectedIdx = idx;
+  renderResult(allJourneys[idx]);
+  renderTrainsPanel(allJourneys, idx);
+}
 
-  populateSelectors();
-  // cache schedule in localStorage for offline readiness (optional)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(reg => console.log("SW registered", reg)).catch(err => console.log("SW failed", err));
+// ─── MAIN HANDLER ─────────────────────────────────────────────────────────────
+function handleFind() {
+  const origin = originSelect.value;
+  const dest   = destSelect.value;
+
+  if (!origin || !dest) {
+    resultArea.innerHTML = '<div class="result-card"><div class="empty-state"><div class="icon">&#128205;</div>Please select both stations.</div></div>';
+    trainsPanelEl.innerHTML = ''; return;
   }
-  window.addEventListener('load', () => {
-    if (!navigator.onLine) document.getElementById('offlineIndicator').style.display = 'inline-block';
-    window.addEventListener('online', () => document.getElementById('offlineIndicator').style.display = 'none');
-    window.addEventListener('offline', () => document.getElementById('offlineIndicator').style.display = 'inline-block');
-  });
+  if (origin === dest) {
+    resultArea.innerHTML = '<div class="result-card"><div class="empty-state"><div class="icon">&#129300;</div>Origin and destination are the same.</div></div>';
+    trainsPanelEl.innerHTML = ''; return;
+  }
+
+  allJourneys = getAllJourneys(origin, dest);
+
+  if (!allJourneys.length) {
+    const dayLabel = currentDayType === 'sunday' ? 'Sunday' : currentDayType === 'saturday' ? 'Saturday' : 'weekday';
+    const tip = currentDayType !== 'weekday' ? ' Tap Change above to check the weekday timetable.' : '';
+    resultArea.innerHTML = '<div class="warn-card"><strong>No route found</strong>No available route between these stations on a ' + dayLabel + '.' + tip + '</div>';
+    trainsPanelEl.innerHTML = ''; return;
+  }
+
+  selectedIdx = findNextIdx(allJourneys);
+  const next  = allJourneys[selectedIdx];
+
+  if (toMins(next.departTime) < nowMins() && selectedIdx === allJourneys.length - 1) {
+    renderResult(null);
+  } else {
+    renderResult(next);
+  }
+  renderTrainsPanel(allJourneys, selectedIdx);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+populateSelectors();
+setDayType(autoDetectDay());
+
+document.getElementById('swapBtn').addEventListener('click', () => {
+  const o = originSelect.value, d = destSelect.value;
+  originSelect.value = d;
+  destSelect.value   = o;
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+window.addEventListener('load', () => {
+  const badge = document.getElementById('offlineIndicator');
+  if (!navigator.onLine) badge.style.display = 'block';
+  window.addEventListener('online',  () => badge.style.display = 'none');
+  window.addEventListener('offline', () => badge.style.display = 'block');
+});
 </script>
 </body>
 </html>
